@@ -1,255 +1,169 @@
 #include "stylehelper.h"
-#include <QPalette>
 #include <QApplication>
+#include <QStyleFactory>
+#include <QRegularExpression>
+#include <QFile>
+#include <QDebug>
 #include<QStyle>
 
-QString GlobalStyle::getLightBaseStyle()
+static bool g_isDark = false;
+static QString g_cachedStyle;
+
+GlobalStyle::ThemeColor GlobalStyle::getLightColor()
 {
-    QString base = R"(
-* {
-    font-family:%1;
-    font-size:%2px;
-}
-QLabel {
-    color:#334155;
-}
-QLineEdit {
-    border:1px solid %3;
-    border-radius:%4px;
-    padding:%5px %6px;
-    background:#f9fafb;
-}
-QLineEdit:focus {
-    border:1px solid %7;
-    background:#ffffff;
-}
-QComboBox {
-    border:1px solid %3;
-    border-radius:%4px;
-    padding:%5px %6px;
-    background:#f9fafb;
-}
-QComboBox::drop-down {
-    border:none;
-}
-QCheckBox {
-    font-size:%8px;
-    color:#475569;
-}
-QCheckBox::indicator {
-    width:16px;
-    height:16px;
-    border-radius:4px;
-    border:1px solid #cbd5e1;
-}
-QCheckBox::indicator:checked {
-    background-color:%7;
-    border-color:%7;
-}
-QPushButton {
-    border:none;
-    border-radius:%4px;
-    padding:%9px;
-    color:white;
-}
-QPushButton:pressed {
-    padding:9px 8px;
-}
-#btnOk, #btnLogin {
-    background:%7;
-}
-#btnOk:hover, #btnLogin:hover {
-    background:%10;
-}
-#btnOk:pressed, #btnLogin:pressed {
-    background:%11;
-}
-#btnCancel {
-    background:%12;
-    color:#333;
-}
-#btnCancel:hover {
-    background:#d1d5db;
-}
-#btnRegister {
-    background:transparent;
-    color:%7;
-}
-#btnRegister:hover {
-    text-decoration:underline;
-}
-#btnAdd { background:%13; }
-#btnDelete { background:%14; }
-#btnSave { background:%15; }
-#btnSearch,#btnChart { background:%16; }
-#btnExportCsv,#btnExportExcel { background:%17; }
-QHeaderView::section {
-    background-color:#34495e;
-    color:white;
-    padding:6px;
-    border:none;
-}
-QTableView {
-    background:white;
-    border:1px solid #ddd;
-    gridline-color:#e8e8e8;
-    color:#222;
-}
-QTableView::item:alternate {
-    background-color:#f6f7f9;
-}
-)";
-    return base.arg(FONT_FAMILY)
-        .arg(FONT_NORMAL)
-        .arg(GRAY_MID)
-        .arg(RADIUS)
-        .arg(INPUT_PADDING_V)
-        .arg(INPUT_PADDING_H)
-        .arg(PRIMARY)
-        .arg(FONT_SMALL)
-        .arg(BTN_PADDING)
-        .arg(PRIMARY_HOVER)
-        .arg(PRIMARY_PRESS)
-        .arg(GRAY_LIGHT)
-        .arg(SUCCESS)
-        .arg(DANGER)
-        .arg(INFO)
-        .arg(PURPLE)
-        .arg(ORANGE);
+    ThemeColor c;
+    c.primary       = "#3b82f6";   // 更柔和的蓝
+    c.primaryHover  = "#2563eb";
+    c.primaryPress  = "#1d4ed8";
+    c.success       = "#10b981";   // 翠绿，替换原来的深绿
+    c.danger        = "#ef4444";   // 暖红，比正红更温和
+    c.info          = "#06b6d4";   // 青色，更有科技感
+    c.purple        = "#8b5cf6";   // 紫罗兰
+    c.orange        = "#f97316";   // 亮橙，醒目但不刺眼
+    c.grayLight     = "#e5e7eb";
+    c.grayMid       = "#d1d5db";
+    c.grayDark      = "#475569";
+    c.bgMain        = "#ffffff";
+    c.bgWidget      = "#f9fafb";
+    c.textNormal    = "#334155";
+    c.textLight     = "#1e293b";
+    c.importColor  = "#0d9488";   // teal-600
+    c.importHover  = "#0f766e";   // teal-700
+    c.importPress  = "#115e59";   // teal-800
+    c.successHover = "#34d399";   c.successPress = "#059669";
+    c.dangerHover  = "#f87171";   c.dangerPress  = "#dc2626";
+    c.infoHover    = "#22d3ee";   c.infoPress    = "#0891b2";
+    c.purpleHover  = "#a78bfa";   c.purplePress  = "#7c3aed";
+    c.orangeHover  = "#fb923c";   c.orangePress  = "#ea580c";
+
+    return c;
 }
 
-QString GlobalStyle::getDarkBaseStyle()
+GlobalStyle::ThemeColor GlobalStyle::getDarkColor()
 {
-    QString dark = R"(
-* {
-    font-family:%1;
-    font-size:%2px;
+    ThemeColor c;
+    c.primary       = "#60a5fa";   // 天蓝，在暗背景上柔和又清晰
+    c.primaryHover  = "#3b82f6";
+    c.primaryPress  = "#2563eb";
+    c.success       = "#34d399";   // 浅翠绿
+    c.danger        = "#f87171";   // 淡红，避免暗色下过于刺眼
+    c.info          = "#22d3ee";   // 浅青
+    c.purple        = "#a78bfa";   // 浅紫
+    c.orange        = "#fb923c";   // 浅橙
+    c.grayLight     = "#475569";
+    c.grayMid       = "#64748b";
+    c.grayDark      = "#334155";
+    c.bgMain        = "#1e293b";
+    c.bgWidget      = "#334155";
+    c.textNormal    = "#cbd5e1";
+    c.textLight     = "#f1f5f9";
+    c.importColor  = "#2dd4bf";   // teal-400
+    c.importHover  = "#5eead4";   // teal-300
+    c.importPress  = "#14b8a6";   // teal-500
+    c.successHover = "#6ee7b7";   c.successPress = "#34d399";
+    c.dangerHover  = "#fca5a5";   c.dangerPress  = "#f87171";
+    c.infoHover    = "#67e8f9";   c.infoPress    = "#22d3ee";
+    c.purpleHover  = "#c4b5fd";   c.purplePress  = "#a78bfa";
+    c.orangeHover  = "#fdba74";   c.orangePress  = "#fb923c";
+
+
+    return c;
 }
-QLabel {
-    color:#cbd5e1;
-}
-QLabel[labelTitle="true"] {
-    font-size:%3px;
-    font-weight:bold;
-    color:#f1f5f9;
-}
-QLineEdit {
-    background:#334155;
-    border:1px solid #475569;
-    border-radius:%4px;
-    padding:%5px %6px;
-    color:#f1f5f9;
-}
-QLineEdit:focus {
-    border:1px solid %7;
-}
-QComboBox {
-    background:#334155;
-    border:1px solid #475569;
-    border-radius:%4px;
-    padding:%5px %6px;
-    color:#f1f5f9;
-}
-QComboBox::drop-down {
-    border:none;
-}
-QCheckBox {
-    font-size:%8px;
-    color:#cbd5e1;
-}
-QCheckBox::indicator {
-    width:16px;
-    height:16px;
-    border-radius:4px;
-    background:#334155;
-    border:1px solid #64748b;
-}
-QCheckBox::indicator:checked {
-    background-color:%7;
-    border-color:%7;
-}
-QPushButton {
-    border:none;
-    border-radius:%4px;
-    padding:%9px;
-    color:white;
-}
-QPushButton:pressed {
-    padding:9px 8px;
-}
-#btnOk, #btnLogin {
-    background:%7;
-}
-#btnOk:hover, #btnLogin:hover {
-    background:#3b82f6;
-}
-#btnCancel {
-    background:#475569;
-    color:#f1f5f9;
-}
-#btnRegister {
-    background:transparent;
-    color:#60a5fa;
-}
-#btnRegister:hover {
-    text-decoration:underline;
-}
-#btnAdd { background:%10; }
-#btnDelete { background:%11; }
-#btnSave { background:%12; }
-#btnSearch,#btnChart { background:%13; }
-#btnExportCsv,#btnExportExcel { background:%14; }
-QHeaderView::section {
-    background-color:#1e293b;
-    color:#f1f5f9;
-    padding:6px;
-    border:none;
-}
-QTableView {
-    background:#3a3f48;
-    border:1px solid #444;
-    gridline-color:#484c54;
-    color:#ffffff;
-}
-QTableView::item:alternate {
-    background-color:#353942;
-}
-QWidget#RegisterDialog, QWidget#LoginWidget, QMainWindow {
-    background:#1e293b;
-}
-)";
-    return dark.arg(FONT_FAMILY)
-        .arg(FONT_NORMAL)
-        .arg(FONT_TITLE)
-        .arg(RADIUS)
-        .arg(INPUT_PADDING_V)
-        .arg(INPUT_PADDING_H)
-        .arg(PRIMARY)
-        .arg(FONT_SMALL)
-        .arg(BTN_PADDING)
-        .arg(SUCCESS)
-        .arg(DANGER)
-        .arg(INFO)
-        .arg(PURPLE)
-        .arg(ORANGE);
+QString GlobalStyle::loadStyleSheet(const QString& qssPath, const ThemeColor& color)
+{
+    // 读取外部qss模板
+    QFile file(qssPath);
+    if (!file.open(QIODevice::ReadOnly))
+    {
+        qWarning() << "加载样式文件失败:" << qssPath;
+        return "";
+    }
+    QString sheet = file.readAll();
+    file.close();
+
+    // 批量替换模板变量
+    sheet.replace("{{FONT_FAMILY}}", FONT_FAMILY);
+    sheet.replace("{{FONT_NORMAL}}", QString::number(FONT_NORMAL));
+    sheet.replace("{{FONT_SMALL}}", QString::number(FONT_SMALL));
+    sheet.replace("{{FONT_TITLE}}", QString::number(FONT_TITLE));
+    sheet.replace("{{RADIUS}}", QString::number(RADIUS));
+    sheet.replace("{{INPUT_PADDING_V}}", QString::number(INPUT_PADDING_V));
+    sheet.replace("{{INPUT_PADDING_H}}", QString::number(INPUT_PADDING_H));
+    sheet.replace("{{BTN_PADDING}}", QString::number(BTN_PADDING));
+
+    sheet.replace("{{PRIMARY}}", color.primary);
+    sheet.replace("{{PRIMARY_HOVER}}", color.primaryHover);
+    sheet.replace("{{PRIMARY_PRESS}}", color.primaryPress);
+    sheet.replace("{{SUCCESS}}", color.success);
+    sheet.replace("{{DANGER}}", color.danger);
+    sheet.replace("{{INFO}}", color.info);
+    sheet.replace("{{PURPLE}}", color.purple);
+    sheet.replace("{{ORANGE}}", color.orange);
+    sheet.replace("{{GRAY_LIGHT}}", color.grayLight);
+    sheet.replace("{{GRAY_MID}}", color.grayMid);
+    sheet.replace("{{GRAY_DARK}}", color.grayDark);
+    sheet.replace("{{BG_MAIN}}", color.bgMain);
+    sheet.replace("{{BG_WIDGET}}", color.bgWidget);
+    sheet.replace("{{TEXT_NORMAL}}", color.textNormal);
+    sheet.replace("{{TEXT_LIGHT}}", color.textLight);
+    sheet.replace("{{IMPORT}}",       color.importColor);
+    sheet.replace("{{IMPORT_HOVER}}", color.importHover);
+    sheet.replace("{{IMPORT_PRESS}}", color.importPress);
+    sheet.replace("{{SUCCESS_HOVER}}", color.successHover);
+    sheet.replace("{{SUCCESS_PRESS}}", color.successPress);
+    sheet.replace("{{DANGER_HOVER}}",  color.dangerHover);
+    sheet.replace("{{DANGER_PRESS}}",  color.dangerPress);
+    sheet.replace("{{INFO_HOVER}}",    color.infoHover);
+    sheet.replace("{{INFO_PRESS}}",    color.infoPress);
+    sheet.replace("{{PURPLE_HOVER}}",  color.purpleHover);
+    sheet.replace("{{PURPLE_PRESS}}",  color.purplePress);
+    sheet.replace("{{ORANGE_HOVER}}",  color.orangeHover);
+    sheet.replace("{{ORANGE_PRESS}}",  color.orangePress);
+
+    return sheet;
 }
 
-void GlobalStyle::setLightPalette()
+void GlobalStyle::switchLightTheme()
 {
-    QPalette pal = QApplication::style()->standardPalette();
-    pal.setColor(QPalette::WindowText, Qt::black);
-    pal.setColor(QPalette::Text, Qt::black);
-    qApp->setPalette(pal);
+    g_isDark = false;
+    QString style = loadStyleSheet(":/style/base.qss", getLightColor());
+    qApp->setStyleSheet(style);
+    g_cachedStyle = style;
+    // 清空应用调色板缓存，强制所有控件重读QSS
+    qApp->setPalette(QApplication::style()->standardPalette());
+
+    // 新增：保存主题状态
+    QSettings settings("YourCompany", "StudentManager");
+    settings.setValue("theme", "light");
+
 }
 
-void GlobalStyle::setDarkPalette()
+void GlobalStyle::switchDarkTheme()
 {
-    QPalette darkPal;
-    darkPal.setColor(QPalette::Window, QColor(44,49,58));
-    darkPal.setColor(QPalette::WindowText, Qt::white);
-    darkPal.setColor(QPalette::Base, QColor(58,63,72));
-    darkPal.setColor(QPalette::AlternateBase, QColor(53,57,66));
-    darkPal.setColor(QPalette::Text, Qt::white);
-    darkPal.setColor(QPalette::Highlight, QColor(41,121,185));
-    qApp->setPalette(darkPal);
+    g_isDark = true;
+    QString style = loadStyleSheet(":/style/base.qss", getDarkColor());
+    qApp->setStyleSheet(style);
+    g_cachedStyle = style;
+    qApp->setPalette(QApplication::style()->standardPalette());
+
+    // 新增：保存主题状态
+    QSettings settings("YourCompany", "StudentManager");
+    settings.setValue("theme", "dark");
+}
+
+// 新增：初始化主题函数
+void GlobalStyle::initTheme() {
+    QSettings settings("YourCompany", "StudentManager");
+    QString theme = settings.value("theme", "light").toString(); // 默认是亮色
+
+    if (theme == "dark") {
+        switchDarkTheme();
+    } else {
+        switchLightTheme();
+    }
+}
+
+bool GlobalStyle::isDarkMode()
+{
+    return g_isDark;
 }

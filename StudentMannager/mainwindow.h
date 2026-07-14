@@ -14,6 +14,7 @@
 #include<QBarSeries>
 #include<QBarSet>
 #include"stylehelper.h"
+#include"importthread.h"
 
 QT_BEGIN_NAMESPACE
 namespace Ui { class MainWindow; }
@@ -49,6 +50,9 @@ private slots:
     void onExportResult(bool success, const QString& msg);
     // 图表刷新
     void refreshChartData();
+    void onImportCSV();
+    void onImportExcel();
+
 
 private:
     Ui::MainWindow *ui;
@@ -57,6 +61,7 @@ private:
     QChart* m_genderChart;
     QChart* m_ageChart;
     QWidget* m_chartWin = nullptr;
+    bool showImportFormatHint();
 };
 
 

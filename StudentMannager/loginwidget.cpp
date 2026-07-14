@@ -1,76 +1,106 @@
+#include "loginwidget.h"
+#include "ui_loginwidget.h"
 #include "registerdialog.h"
-#include "ui_registerdialog.h"
 #include "stylehelper.h"
 #include <QSqlQuery>
-#include <QSqlError>
 #include <QMessageBox>
-RegisterDialog::RegisterDialog(QWidget *parent)
-    : QDialog(parent), ui(new Ui::RegisterDialog)
+#include <QSettings>
+#include <QStyleFactory>
+LoginWidget::LoginWidget(QWidget *parent)
+    : QDialog(parent), ui(new Ui::LoginWidget), m_loginRole(ROLE_NORMAL)
 {
     ui->setupUi(this);
-    this->setObjectName("RegisterDialog"); // 绑定ID给全局样式选择器
-    this->setWindowTitle("用户注册");
-    this->setFixedSize(320, 260);
-    // 填充角色下拉框
-    ui->cbxRole->addItem("管理员", ROLE_ADMIN);
-    ui->cbxRole->addItem("普通用户", ROLE_NORMAL);
-    connect(ui->btnOk, &QPushButton::clicked, this, &RegisterDialog::onBtnOkClicked);
-    connect(ui->btnCancel, &QPushButton::clicked, this, &RegisterDialog::onBtnCancelClicked);
-    // 默认加载亮色样式，切换由外部调用setStyleSheet
-    this->setStyleSheet(GlobalStyle::getLightBaseStyle());
+    this->setObjectName("LoginWidget");
+    this->setWindowTitle("系统登录");
+    this->setFixedSize(360, 280);
+    QSettings setting("StudentManager", "loginCfg");
+    bool remember = setting.value("remember", false).toBool();
+    ui->ckRemember->setChecked(remember);
+    if(remember)
+    {
+        ui->editUser->setText(setting.value("username").toString());
+        ui->editPwd->setText(setting.value("password").toString());
+    }
+
+    ui->btnLogin->setProperty("btnType", "primary");
+    ui->btnRegister->setProperty("btnType", "link");
+
+    connect(ui->btnLogin, &QPushButton::clicked, this, &LoginWidget::onBtnLogin);
+    connect(ui->btnRegister, &QPushButton::clicked, this, &LoginWidget::onBtnRegister);
+    connect(ui->ckDark, &QCheckBox::toggled, this, &LoginWidget::switchTheme);
+    qApp->setStyle(QStyleFactory::create("Fusion"));
+
+    ui->ckDark->setChecked(GlobalStyle::isDarkMode());
 }
-RegisterDialog::~RegisterDialog()
+LoginWidget::~LoginWidget()
 {
     delete ui;
 }
-bool RegisterDialog::checkUserExist(const QString &username)
+UserRole LoginWidget::getUserRole() const
 {
-    QSqlQuery query;
-    query.prepare("SELECT id FROM sys_user WHERE username = ?");
-    query.addBindValue(username);
-    query.exec();
-    return query.next();
+    return m_loginRole;
 }
-bool RegisterDialog::insertNewUser(const QString &user, const QString &pwd, UserRole role)
+bool LoginWidget::verifyAccount(const QString &user, const QString &pwd)
 {
     QSqlQuery query;
-    query.prepare("INSERT INTO sys_user(username, password, role) VALUES (?, ?, ?)");
+    query.prepare("SELECT role FROM sys_user WHERE username = ? AND password = ?");
     query.addBindValue(user);
     query.addBindValue(pwd);
-    query.addBindValue(role);
-    bool ok = query.exec();
-    if(!ok)
-        QMessageBox::critical(this, "数据库错误", query.lastError().text());
-    return ok;
+    if(query.exec() && query.next())
+    {
+        m_loginRole = static_cast<UserRole>(query.value("role").toInt());
+        return true;
+    }
+    return false;
 }
-void RegisterDialog::onBtnOkClicked()
+void LoginWidget::onBtnLogin()
 {
-    QString user = ui->regUser->text().trimmed();
-    QString pwd = ui->regPwd->text();
-    QString pwd2 = ui->regPwd2->text();
-    UserRole role = static_cast<UserRole>(ui->cbxRole->currentData().toInt());
+    QString user = ui->editUser->text().trimmed();
+    QString pwd = ui->editPwd->text();
     if(user.isEmpty() || pwd.isEmpty())
     {
-        QMessageBox::warning(this, "提示", "用户名和密码不能为空");
+        QMessageBox::warning(this, "提示", "用户名/密码不能为空");
         return;
     }
-    if(pwd != pwd2)
+    if(!verifyAccount(user, pwd))
     {
-        QMessageBox::warning(this, "提示", "两次输入密码不一致");
+        QMessageBox::critical(this, "错误", "账号或密码错误");
         return;
     }
-    if(checkUserExist(user))
+    QSettings setting("StudentManager", "loginCfg");
+    if(ui->ckRemember->isChecked())
     {
-        QMessageBox::warning(this, "提示", "该用户名已存在");
-        return;
+        setting.setValue("remember", true);
+        setting.setValue("username", user);
+        setting.setValue("password", pwd);
     }
-    if(insertNewUser(user, pwd, role))
+    else
     {
-        QMessageBox::information(this, "成功", "注册完成，请登录！");
-        this->accept();
+        setting.clear();
     }
+    this->accept();
 }
-void RegisterDialog::onBtnCancelClicked()
+void LoginWidget::onBtnRegister()
 {
-    this->reject();
+    RegisterDialog regDlg(this);
+    // 同步当前明暗主题给注册窗口
+    if(ui->ckDark->isChecked())
+        GlobalStyle::switchDarkTheme();
+    else
+        GlobalStyle::switchLightTheme();
+    regDlg.exec();
+}
+// LoginWidget::switchTheme
+void LoginWidget::switchTheme(bool isDark)
+{
+    qApp->setStyle(QStyleFactory::create("Fusion"));
+    if (isDark)
+    {
+        GlobalStyle::switchDarkTheme();
+    }
+    else
+    {
+        GlobalStyle::switchLightTheme();
+    }
+    this->update(); // 弹窗全局重绘
 }

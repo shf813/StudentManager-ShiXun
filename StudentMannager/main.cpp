@@ -1,5 +1,5 @@
 #include "mainwindow.h"
-#include "loginwidget.h"
+#include"loginwidget.h"
 #include <QApplication>
 #include <QLocale>
 #include <QTranslator>
@@ -7,6 +7,7 @@
 #include <QSqlQuery>
 #include <QMessageBox>
 #include<QSqlError>
+#include"stylehelper.h"
 
 // 全局数据库初始化函数
 bool initGlobalDatabase()
@@ -46,6 +47,8 @@ int main(int argc, char *argv[])
 {
     QApplication a(argc, argv);
 
+    // 它会自动读取上次保存的主题并应用
+    GlobalStyle::initTheme();
     // 第一步：提前初始化数据库
     if (!initGlobalDatabase()) return -1;
 
@@ -60,6 +63,8 @@ int main(int argc, char *argv[])
     }
 
     LoginWidget login;
+
+
     // 使用 exec() 以模态方式显示登录框
     if(login.exec() == QDialog::Accepted)
     {

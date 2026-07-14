@@ -8,6 +8,9 @@ CONFIG += c++17
 DEFINES += QT_DISABLE_DEPRECATED_BEFORE=0x060000
 
 SOURCES += main.cpp \
+    excelexportthread.cpp \
+    excelimportthread.cpp \
+    importthread.cpp \
     loginwidget.cpp \
     registerdialog.cpp \
     mainwindow.cpp \
@@ -15,6 +18,9 @@ SOURCES += main.cpp \
     stylehelper.cpp
 
 HEADERS += commondef.h \
+    excelexportthread.h \
+    excelimportthread.h \
+    importthread.h \
     loginwidget.h \
     registerdialog.h \
     mainwindow.h \
@@ -76,3 +82,14 @@ CONFIG += embed_translations
 qnx: target.path = /tmp/$${TARGET}/bin
 else: unix:!android: target.path = /opt/$${TARGET}/bin
 !isEmpty(target.path): INSTALLS += target
+
+DISTFILES += \
+    ../../../../../style/base.qss \
+    QXlsx/CMakeLists.txt \
+    QXlsx/QXlsx.pri
+
+RESOURCES += \
+    resource.qrc
+
+include(QXlsx/QXlsx.pri)
+

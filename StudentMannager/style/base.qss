@@ -1,0 +1,133 @@
+* {
+    font-family:{{FONT_FAMILY}};
+    font-size:{{FONT_NORMAL}}px;
+}
+/* 为 QMainWindow 和 QWidget 设置背景色 */
+QMainWindow, QWidget {
+    background-color: {{BG_MAIN}};
+}
+QLabel { color:{{TEXT_NORMAL}}; }
+QLabel[labelTitle="true"] {
+    font-size:{{FONT_TITLE}}px;
+    font-weight:bold;
+    color:{{TEXT_LIGHT}};
+}
+QLineEdit {
+    border:1px solid {{GRAY_MID}};
+    border-radius:{{RADIUS}}px;
+    padding:{{INPUT_PADDING_V}}px {{INPUT_PADDING_H}}px;
+    background:{{BG_WIDGET}};
+    color:{{TEXT_NORMAL}};
+}
+QLineEdit:focus { border:1px solid {{PRIMARY}}; }
+QLineEdit:disabled { color:#999; border-color:{{GRAY_LIGHT}}; }
+
+QComboBox {
+    border:1px solid {{GRAY_MID}};
+    border-radius:{{RADIUS}}px;
+    padding:{{INPUT_PADDING_V}}px {{INPUT_PADDING_H}}px;
+    background:{{BG_WIDGET}};
+    color:{{TEXT_NORMAL}};
+}
+QComboBox::drop-down { border:none; }
+QComboBox QAbstractItemView {
+    background:{{BG_WIDGET}};
+    color:{{TEXT_NORMAL}};
+    selection-background-color:{{PRIMARY}};
+}
+
+QCheckBox {
+    color: {{TEXT_NORMAL}}; /* 新增：让文字颜色跟随主题 */
+    spacing: 8px; /* 可选：设置文字和方框之间的间距 */
+}
+
+QCheckBox::indicator {
+    width:16px;height:16px;border-radius:4px;
+    border:1px solid {{GRAY_MID}};
+    background:{{BG_WIDGET}};
+
+}
+QCheckBox::indicator:checked {
+    background-color:{{PRIMARY}};
+    border-color:{{PRIMARY}};
+}
+
+QPushButton {
+    border: none;
+    border-radius: {{RADIUS}}px;
+    padding: {{BTN_PADDING}}px;
+    color: white;
+}
+
+/* 通用按下时内边距微调（保留原有） */
+QPushButton:pressed {
+    padding: 9px 8px;
+}
+
+/* ========== primary ========== */
+QPushButton[btnType="primary"] { background: {{PRIMARY}}; }
+QPushButton[btnType="primary"]:hover { background: {{PRIMARY_HOVER}}; }
+QPushButton[btnType="primary"]:pressed { background: {{PRIMARY_PRESS}}; }
+
+/* ========== cancel ========== */
+QPushButton[btnType="cancel"] { background: {{GRAY_LIGHT}}; color: #333; }
+QPushButton[btnType="cancel"]:hover { background: {{GRAY_MID}}; }
+QPushButton[btnType="cancel"]:pressed { background: {{GRAY_DARK}}; }
+
+/* ========== link ========== */
+QPushButton[btnType="link"] { background: transparent; color: {{PRIMARY}}; }
+QPushButton[btnType="link"]:hover { text-decoration: underline; }
+QPushButton[btnType="link"]:pressed { color: {{PRIMARY_PRESS}}; }
+
+/* ========== success ========== */
+QPushButton[btnType="success"] { background: {{SUCCESS}}; }
+QPushButton[btnType="success"]:hover { background: {{SUCCESS_HOVER}}; }
+QPushButton[btnType="success"]:pressed { background: {{SUCCESS_PRESS}}; }
+
+/* ========== danger ========== */
+QPushButton[btnType="danger"] { background: {{DANGER}}; }
+QPushButton[btnType="danger"]:hover { background: {{DANGER_HOVER}}; }
+QPushButton[btnType="danger"]:pressed { background: {{DANGER_PRESS}}; }
+
+/* ========== info ========== */
+QPushButton[btnType="info"] { background: {{INFO}}; }
+QPushButton[btnType="info"]:hover { background: {{INFO_HOVER}}; }
+QPushButton[btnType="info"]:pressed { background: {{INFO_PRESS}}; }
+
+/* ========== purple ========== */
+QPushButton[btnType="purple"] { background: {{PURPLE}}; }
+QPushButton[btnType="purple"]:hover { background: {{PURPLE_HOVER}}; }
+QPushButton[btnType="purple"]:pressed { background: {{PURPLE_PRESS}}; }
+
+/* ========== orange ========== */
+QPushButton[btnType="orange"] { background: {{ORANGE}}; }
+QPushButton[btnType="orange"]:hover { background: {{ORANGE_HOVER}}; }
+QPushButton[btnType="orange"]:pressed { background: {{ORANGE_PRESS}}; }
+
+/* ========== import ========== */
+QPushButton[btnType="import"] { background: {{IMPORT}}; }
+QPushButton[btnType="import"]:hover { background: {{IMPORT_HOVER}}; }
+QPushButton[btnType="import"]:pressed { background: {{IMPORT_PRESS}}; }
+
+QHeaderView::section {
+    background-color:{{BG_MAIN}};
+    color:{{TEXT_LIGHT}};
+    padding:6px; border:none;
+}
+/* 重点修改：用alternate-background-color绑定主题变量，移除::item:alternate */
+QTableView {
+    background:{{BG_WIDGET}};
+    alternate-background-color:{{GRAY_LIGHT}}; /* 交替行直接绑定主题灰度变量 */
+    border:1px solid {{GRAY_MID}};
+    gridline-color:{{GRAY_LIGHT}};
+    color:{{TEXT_NORMAL}};
+    qproperty-alternatingRowColors: true; /* QSS内强制开启斑马线，避免代码遗漏 */
+}
+/* 选中行样式兼容亮色/暗色 */
+QTableView::item:selected {
+    background:{{PRIMARY}};
+    color:white;
+}
+
+QScrollBar:vertical { width:8px; background:{{BG_MAIN}}; }
+QScrollBar::handle:vertical { background:{{GRAY_MID}}; border-radius:4px; }

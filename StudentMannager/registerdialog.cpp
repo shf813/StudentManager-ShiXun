@@ -16,8 +16,9 @@ RegisterDialog::RegisterDialog(QWidget *parent)
     ui->cbxRole->addItem("普通用户", ROLE_NORMAL);
     connect(ui->btnOk, &QPushButton::clicked, this, &RegisterDialog::onBtnOkClicked);
     connect(ui->btnCancel, &QPushButton::clicked, this, &RegisterDialog::onBtnCancelClicked);
-    // 默认加载亮色样式，切换由外部调用setStyleSheet
-    this->setStyleSheet(GlobalStyle::getLightBaseStyle());
+    // 默认加载亮色样式
+    ui->btnOk->setProperty("btnType", "primary");
+    ui->btnCancel->setProperty("btnType", "cancel");
 }
 RegisterDialog::~RegisterDialog()
 {
