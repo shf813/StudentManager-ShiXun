@@ -1,0 +1,11 @@
+release/main.o
+release/loginwidget.o
+release/registerdialog.o
+release/mainwindow.o
+release/exportthread.o
+release/stylehelper.o
+release/qrc_qmake_qmake_qm_files.o
+release/moc_loginwidget.o
+release/moc_registerdialog.o
+release/moc_mainwindow.o
+release/moc_exportthread.o
