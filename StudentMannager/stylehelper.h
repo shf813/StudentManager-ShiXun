@@ -6,6 +6,7 @@
 #include <QFile>
 #include <QMap>
 #include<QSettings>
+#include<QMessageBox>
 
 namespace GlobalStyle
 {
@@ -18,6 +19,7 @@ const QString FONT_FAMILY = "\"Microsoft YaHei\"";
 const int FONT_NORMAL = 14;
 const int FONT_SMALL = 13;
 const int FONT_TITLE = 22;
+void setupMessageBoxButton(QMessageBox* msgBox, QMessageBox::StandardButton which, const QString& btnType);
 
 // 主题色彩上下文结构体，统一管理亮色/暗色两套色值
 struct ThemeColor

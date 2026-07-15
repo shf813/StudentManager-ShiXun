@@ -17,7 +17,7 @@ public:
 
     // 获取登录用户角色，给main调用
     UserRole getUserRole() const;
-    // 主题切换槽，与主窗口联动
+    QString getLoginUsername() const { return m_loginUsername; }
 public slots:
     void switchTheme(bool isDark);
 
@@ -28,6 +28,7 @@ private slots:
 private:
     Ui::LoginWidget *ui;
     UserRole m_loginRole;
+    QString m_loginUsername;
     bool verifyAccount(const QString& user, const QString& pwd);
 };
 

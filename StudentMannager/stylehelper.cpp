@@ -5,6 +5,8 @@
 #include <QFile>
 #include <QDebug>
 #include<QStyle>
+#include<QPushButton>
+#include<QMessageBox>
 
 static bool g_isDark = false;
 static QString g_cachedStyle;
@@ -166,4 +168,29 @@ void GlobalStyle::initTheme() {
 bool GlobalStyle::isDarkMode()
 {
     return g_isDark;
+}
+
+
+void GlobalStyle::setupMessageBoxButton(QMessageBox* msgBox, QMessageBox::StandardButton which, const QString& btnType)
+{
+    if (!msgBox) return;
+    QPushButton* btn = qobject_cast<QPushButton*>(msgBox->button(which));
+    if (!btn) {
+        qWarning() << "setupMessageBoxButton: button not found for" << which;
+        return;
+    }
+
+    // 设置属性
+    btn->setProperty("btnType", btnType);
+
+    // 强制样式重新计算
+    btn->style()->unpolish(btn);
+    btn->style()->polish(btn);
+    btn->update();
+
+    // 同时刷新对话框，确保内部布局更新
+    msgBox->update();
+
+    // 调试：打印属性值，确认设置成功
+    qDebug() << "Button property set:" << btn->property("btnType").toString();
 }

@@ -19,21 +19,19 @@ void ExportThread::run()
 
     QTextStream out(&file);
     out.setEncoding(QStringConverter::Utf8);
-    // 写入UTF-8 BOM标记
-    file.write(QByteArray::fromHex("EFBBBF"));
+    file.write(QByteArray::fromHex("EFBBBF"));  // UTF-8 BOM
     int totalRow = m_model->rowCount();
 
-    // 写入固定表头
+    // 写入表头
     QStringList header = {"学号", "姓名", "性别", "年龄", "专业", "身份证号", "手机号"};
-    if(m_isCsv)
+    if (m_isCsv)
         out << header.join(",") << "\n";
     else
         out << header.join("\t") << "\n";
 
     // 逐行写入数据
-    for(int r = 0; r < totalRow; r++)
+    for (int r = 0; r < totalRow; ++r)
     {
-        // 响应取消操作
         if (isInterruptionRequested())
         {
             file.close();
@@ -41,20 +39,33 @@ void ExportThread::run()
             return;
         }
 
-        QStringList rowData;
-        rowData << m_model->index(r,1).data().toString()
-                << m_model->index(r,2).data().toString()
-                << m_model->index(r,3).data().toString()
-                << m_model->index(r,4).data().toString()
-                << m_model->index(r,5).data().toString()
-                << m_model->index(r,6).data().toString()
-                << m_model->index(r,7).data().toString();
+        // 提取需要特殊处理的字段
+        QString stuNo   = m_model->index(r, 1).data().toString();
+        QString idCard  = m_model->index(r, 6).data().toString();
+        QString phone   = m_model->index(r, 7).data().toString();
 
-        // CSV转义处理
-        if(m_isCsv)
+        if (m_isCsv)
         {
+            // 对长数字字段前加制表符，避免 Excel 科学计数法
+            stuNo   = "\t" + stuNo;
+            idCard  = "\t" + idCard;
+            phone   = "\t" + phone;
+        }
+
+        QStringList rowData;
+        rowData << stuNo
+                << m_model->index(r, 2).data().toString()   // 姓名
+                << m_model->index(r, 3).data().toString()   // 性别
+                << m_model->index(r, 4).data().toString()   // 年龄
+                << m_model->index(r, 5).data().toString()   // 专业
+                << idCard
+                << phone;
+
+        if (m_isCsv)
+        {
+            // CSV 转义：字段内双引号变为两个双引号，并用双引号包裹整个字段
             QStringList csvRow;
-            for (auto& field : rowData)
+            for (auto &field : rowData)
             {
                 field.replace("\"", "\"\"");
                 csvRow << "\"" + field + "\"";
@@ -63,10 +74,11 @@ void ExportThread::run()
         }
         else
         {
+            // TSV (制表符分隔) 直接输出
             out << rowData.join("\t") << "\n";
         }
 
-        emit progressUpdate(static_cast<int>((r+1)*100.0/totalRow));
+        emit progressUpdate(static_cast<int>((r + 1) * 100.0 / totalRow));
     }
 
     file.close();

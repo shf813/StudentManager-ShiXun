@@ -16,6 +16,7 @@
 #include"stylehelper.h"
 #include"importthread.h"
 
+
 QT_BEGIN_NAMESPACE
 namespace Ui { class MainWindow; }
 QT_END_NAMESPACE
@@ -33,10 +34,13 @@ public:
     bool initDatabase();
     // 构建图表窗口
     void createChartWindow();
+    void setCurrentUsername(const QString& username);
 
 public slots:
     // 主题切换
     void switchTheme(bool isDark);
+    void onExportChart();
+
 
 private slots:
     // 学生操作
@@ -52,6 +56,9 @@ private slots:
     void refreshChartData();
     void onImportCSV();
     void onImportExcel();
+    void onChangePassword();
+    void onRefreshData();
+    void onAbout();
 
 
 private:
@@ -61,6 +68,20 @@ private:
     QChart* m_genderChart;
     QChart* m_ageChart;
     QWidget* m_chartWin = nullptr;
+    QWidget* m_chartContainer = nullptr;
+    QString m_currentUser;
+    QAction *changePwdAction;
+    QAction *exitAction;
+    QMenu *m_fileMenu;          // 文件菜单（整体控制）
+    QMenu *m_editMenu;          // 编辑菜单（整体控制）
+    QAction *m_importCsvAction;
+    QAction *m_importExcelAction;
+    QAction *m_exportCsvAction;
+    QAction *m_exportExcelAction;
+    QAction *m_addAction;
+    QAction *m_deleteAction;
+    QAction *m_saveAction;
+    void applyUserFilter();
     bool showImportFormatHint();
 };
 

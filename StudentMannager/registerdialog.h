@@ -23,6 +23,7 @@ private:
     Ui::RegisterDialog *ui;
     bool checkUserExist(const QString& username);
     bool insertNewUser(const QString& user, const QString& pwd, UserRole role);
+    bool validateStudent(const QString& stuNo, const QString& name, const QString& gender, const QString& idCard);
 };
 
 #endif // REGISTERDIALOG_H

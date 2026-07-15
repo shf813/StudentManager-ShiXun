@@ -70,6 +70,7 @@ int main(int argc, char *argv[])
     {
         MainWindow w;
         w.setUserRole(login.getUserRole());
+         w.setCurrentUsername(login.getLoginUsername());
 
         // 关键修改：将主窗口的主题切换信号连接到登录窗口的槽
         // 这样当在主窗口切换主题时，登录窗口（如果再次打开）也会应用相同的主题
